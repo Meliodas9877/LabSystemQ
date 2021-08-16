@@ -1,0 +1,10 @@
+<nz-input-group [nzSuffix]="suffixIconSearch">
+    <input
+      type="text"
+      nz-input
+      placeholder="按学号或姓名搜索"
+      [(ngModel)]="searchTerm"
+      (input)="searchSend()"
+    />
+  </nz-input-group>
+  <ng-template #suffixIconSearch> <i nz-icon nzType="search"></i> </ng-template>

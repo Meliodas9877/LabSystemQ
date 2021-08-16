@@ -1,0 +1,171 @@
+<app-search-student (onSend)="onSend($event)"></app-search-student>
+
+
+<button
+  (click)="addStudent()"
+  id="add-btn"
+  nz-button
+  nzType="primary"
+  nzShape="round"
+>
+  <i nz-icon nzType="plus-circle" style="transform: translateY(-25%)"></i
+  >新增</button
+><br /><br />
+
+<nz-table
+  #studentTable
+  [nzData]="students"
+  nzShowSizeChanger
+  [nzScroll]="{ x: '1100px', y: '500px' }"
+  [nzFrontPagination]="false"
+  [nzLoading]="loading"
+  [nzTotal]="total"
+  [nzPageSize]="pageSize"
+  [nzPageIndex]="pageIndex"
+  (nzQueryParams)="onQueryParamsChange($event)"
+>
+  <thead>
+    <tr>
+      <th nzColumnKey="studentId" nzWidth="150px" [nzSortFn]="true">学号</th>
+      <th nzWidth="150px">姓名</th>
+      <th nzColumnKey="gender" nzWidth="90px" [nzFilters]="filterGender" [nzFilterFn]="true" >性别</th>
+      <th nzColumnKey="schoolYear" nzWidth="140px" [nzSortFn]="true">入学年份</th>
+      <th nzWidth="150px">手机号</th>
+      <th nzWidth="230px">邮箱</th>
+      <th nzColumnKey="studentType" nzWidth="120px" [nzFilters]="filterType" [nzFilterFn]="true" >学生类别</th>
+      <th nzWidth="180px">身份证</th>
+      <th nzColumnKey="photo" nzWidth="180px">头像</th>
+      <th nzColumnKey="action" nzRight nzWidth="130px">操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let stud of studentTable.data">
+      <td>{{ stud.studentId }}</td>
+      <td>{{ stud.studentName }}</td>
+      <td>{{ stud.gender | gender }}</td>
+      <td>{{ stud.schoolYear }}</td>
+      <td>{{ stud.telephone }}</td>
+      <td>{{ stud.email }}</td>
+      <td>{{ stud.studentType | studentType }}</td>
+      <td>{{ stud.idNo }}</td>
+      <td><nz-upload
+        class="avatar-uploader"
+        nzAction="http://127.0.0.1:8000/photo/"
+        nzName="avatar"
+        nzListType="picture-card"
+        [nzShowUploadList]="false"
+        [nzBeforeUpload]="beforeUpload"
+        (nzChange)="handleChange($event)"
+        [nzData]="phoBelong(stud)"
+      >
+        <ng-container *ngIf=!stud.avatarUrl>
+          <i class="upload-icon" nz-icon [nzType]="loading ? 'loading' : 'plus'"></i>
+          <div class="ant-upload-text">Upload</div>
+        </ng-container>
+        <img *ngIf=stud.avatarUrl [src]=stud.avatarUrl style="width: 100%" />
+      </nz-upload></td>
+      <td nzRight>
+        <a (click)="updateStudent(stud)" style="color: rgb(82, 124, 238)"
+          >修改</a
+        >
+        |
+        <a (click)="deleteStudent(stud)" style="color: rgb(240, 93, 93)">
+          删除</a
+        >
+      </td>
+    </tr>
+  </tbody>
+</nz-table>
+
+<nz-modal
+  [(nzVisible)]="isVisible"
+  (nzOnCancel)="cancel()"
+  (nzOnOk)="submitForm(infoForm.value)"
+>
+  <ng-container *nzModalContent>
+    <div>
+      <h3 *ngIf="mode === 'add'">新增学生</h3>
+      <h3 *ngIf="mode === 'update'">修改信息</h3>
+    </div>
+
+    <form nz-form [formGroup]="infoForm" [nzAutoTips]="autoTips">
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>学号</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <input
+            nz-input
+            formControlName="studentId"
+            id="studentId"
+            name="studentId"
+          />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>姓名</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <input
+            nz-input
+            formControlName="studentName"
+            id="studentName"
+            name="studentName"
+          />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>性别</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <nz-radio-group formControlName="gender" id="gender" name="gender">
+            <label nz-radio nzValue="M">男</label>
+            <label nz-radio nzValue="F">女</label>
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>手机号</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <input
+            nz-input
+            formControlName="telephone"
+            id="telephone"
+            name="telephone"
+          />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>邮箱</nz-form-label>
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <input nz-input formControlName="email" id="email" name="email" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired
+          >学生类别</nz-form-label
+        >
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <nz-radio-group
+            formControlName="studentType"
+            id="studentType"
+            name="studentType"
+          >
+            <label nz-radio nzValue="D">博士</label>
+            <label nz-radio nzValue="M">硕士</label>
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired
+          >身份证号</nz-form-label
+        >
+        <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback>
+          <input nz-input formControlName="idNo" id="idNo" name="idNo" />
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
